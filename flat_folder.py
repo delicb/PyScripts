@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
 __author__ = "Bojan Delic <bojan@delic.in.rs>"
-__date__ = "Sep 19, 2010"
+__date__ = "Sep 13, 2010"
 
 import sys
 import os
-from pprint import pprint
+import shutil
 from optparse import OptionParser
 
 # TODO: Dodati opciju za exclude imena fajlova, exstenzija, foldera itd
+# TODO: Dodati opcije za odluku sta da se radi ako se fajlovi isto zovu
 
 USAGE = "%prog <FOLDER>"
 ROOT = ""
@@ -45,12 +46,15 @@ def move_files(dirname, fnames):
 		f = os.path.join(dirname, file)
 		if os.path.isfile(f):
 			log("Moving file %s to %s" % (f, ROOT))
-			# TODO: Zapravo move-uj fajlove
+			shutil.move(f, ROOT)
 		
 def delete_folders(folders):
 	for folder in folders:
 		log("Deleting folder %s" % folder)
-		# TODO: Zapravo obrisi foldere
+		# NOTE: Ovde namerno korisnim os.rmdir umesto shutil.rmtree, jer 
+		# bi folderi trebalo da su prazni. Kad kasnije implementiram
+		# exclude mehanizam ovo bi trebalo promeniti u shutil.rmtree
+		os.rmdir(folder)
 
 
 def main():
