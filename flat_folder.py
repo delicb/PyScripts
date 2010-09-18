@@ -9,12 +9,11 @@ import shutil
 from optparse import OptionParser
 
 # TODO: Dodati opciju za exclude imena fajlova, exstenzija, foldera itd
-# TODO: Dodati opcije za odluku sta da se radi ako se fajlovi isto zovu
 
 USAGE = "%prog <FOLDER>"
 ROOT = ""
 options = None
-
+FILE_LIST = []
 
 def get_opt_parser():
 	parser = OptionParser(usage=USAGE, version="%prog 0.1")
@@ -28,27 +27,70 @@ def log(msg):
 	if options.verbose:
 		print(msg)
 		
-def get_abs_folder(folder):
+def get_abs_folder(folder='.'):
+	'''Returns absolute path of provided folder.
+	
+	Provided path can be relative or absolute. If nothing is provided, 
+	absolute path to current folder will be returned.
+	
+	If provided folder does not exist, ValueError will be rased.	
+	'''
 	if not os.path.isabs(folder):
 		folder = os.path.abspath(os.path.join(os.getcwd(), folder))
 	if not os.path.isdir(folder):
-		print 'Folder "%s" does not exist' % folder
-		sys.exit(1)
+		raise ValueError('Folder "%s" does not exist' % folder)
 	return folder
 	
 
 def walk(visited_folders, dirname, fnames):
+	'''Callback for os.path.walk '''
 	visited_folders.append(dirname)
 	move_files(dirname, fnames)
 	
 def move_files(dirname, fnames):
+	'''Actually moves the files (fnames) from dirname to ROOT folder.
+	
+	ROOT is defined as parameter when program starts.
+	'''
 	for file in fnames:
+		dest_file = generate_unique_file_name(file)
+		dest = os.path.join(ROOT, dest_file)
 		f = os.path.join(dirname, file)
 		if os.path.isfile(f):
-			log("Moving file %s to %s" % (f, ROOT))
-			shutil.move(f, ROOT)
-		
+			log("Moving file %s to %s" % (f, dest))
+			shutil.move(f, dest)
+
+def generate_unique_file_name(file):
+	'''Generates unique file name based on given file name.
+	
+	If given file name is not in FILE_LIST (global variable) returns the same
+	name. 
+	If it is in the FILE_LIST it appendes nubmer at the end of the file name, 
+	but before extension. 
+	If there are more then 2 files with the same name number at the end of the 
+	name will be incremented.
+	
+	So, if this function is called 3 times with parameter 'a.txt' results would 
+	be (in this order): a.txt, a(1).txt, a(2).txt .
+	
+	'''
+	if file not in FILE_LIST:
+		FILE_LIST.append(file) 
+		return file
+	i = 0
+	f = file
+	while f in FILE_LIST:
+		i += 1
+		name, ext = os.path.splitext(file)
+		f = '%s(%d)%s' % (name, i, ext)
+	FILE_LIST.append(f)
+	return f
+
 def delete_folders(folders):
+	'''Deletes folders passed. 
+	
+	Parameter folders should be iterable that contains
+	witch folders should be deleted.'''
 	for folder in folders:
 		log("Deleting folder %s" % folder)
 		# NOTE: Ovde namerno korisnim os.rmdir umesto shutil.rmtree, jer 
@@ -66,7 +108,15 @@ def main():
 		print("ERROR: Only one argument is allowed and that should be folder name")
 		parser.print_help()
 		sys.exit(2)
-	ROOT = get_abs_folder(args[0])
+	if len(args) == 0:
+		folder = "."
+	else:
+		folder = args[0]
+	try:
+		ROOT = get_abs_folder(folder)
+	except ValueError, e:
+		print str(e)
+		sys.exit(1)
 	VISITED_FOLDERS = []
 	os.path.walk(ROOT, walk, VISITED_FOLDERS)
 	if options.delete:
@@ -78,7 +128,8 @@ def main():
 				VISITED_FOLDERS.remove(ROOT) 
 			except ValueError, e:
 				# ne bi trebalo da se desi, ali nikad se ne zna
-				pass
+				print("Error occured (%s)" % str(e))
+				sys.exit(2)
 		delete_folders(VISITED_FOLDERS)
 	
 if __name__ == '__main__':
