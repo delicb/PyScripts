@@ -8,6 +8,8 @@ import os
 import shutil
 from optparse import OptionParser
 
+from utils import get_abs_folder
+
 # TODO: Dodati opciju za exclude imena fajlova, exstenzija, foldera itd
 
 USAGE = "%prog <FOLDER>"
@@ -23,24 +25,10 @@ def get_opt_parser():
 						default=False, help="Don't print status messages to stdout")
 	return parser
 
+# TODO: Zameniti ovo pravim logovanjem
 def log(msg):
 	if options.verbose:
 		print(msg)
-		
-def get_abs_folder(folder='.'):
-	'''Returns absolute path of provided folder.
-	
-	Provided path can be relative or absolute. If nothing is provided, 
-	absolute path to current folder will be returned.
-	
-	If provided folder does not exist, ValueError will be rased.	
-	'''
-	if not os.path.isabs(folder):
-		folder = os.path.abspath(os.path.join(os.getcwd(), folder))
-	if not os.path.isdir(folder):
-		raise ValueError('Folder "%s" does not exist' % folder)
-	return folder
-	
 
 def walk(visited_folders, dirname, fnames):
 	'''Callback for os.path.walk '''

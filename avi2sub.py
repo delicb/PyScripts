@@ -1,5 +1,15 @@
 #!/usr/bin/env python
+'''
+Searches for video and subtitle files in provided folder and tries to find
+matches based on there names and renames subtitle files to match corespodenting
+video file.
 
+For example, if there are two files in folder:
+    The.Big.Bang.Theory.S03.E10.The.Gorilla.Experiment.HDTV.XviD-FQM.avi
+    TBBT[3x10].srt
+the later will be renamed to 
+The.Big.Bang.Theory.S03.E10.The.Gorilla.Experiment.HDTV.XviD-FQM.srt .
+'''
 __author__ = "Bojan Delic <bojan@delic.in.rs>"
 __date__ = "Sep 18, 2010"
 
@@ -7,6 +17,11 @@ import sys
 import os
 import glob
 import re
+import argparse
+
+from utils import get_abs_folder, flatten
+
+
 
 # Ovo bi mozda moglo da se uradi u jednom regexp-u, ali ovako ce biti mnogo
 # lakse za kasnija prosirenja, a bice ih, posto ne verujem da sam ovde
@@ -18,67 +33,113 @@ REG_EXPS = [
     re.compile(r'.*Series ?(?P<season>\d) ?Ep(?P<episode>\d+).*', re.I),
 ]
 
-def get_abs_folder(folder='.'):
-    '''Returns absolute path of provided folder.
+VIDEO_GLOB = ['*.avi', '*.wmv']
+SUBTITLE_GLOB = ['*.srt', '*.sub']
+
+parser = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument('-f', '--folder', default='.', dest='folder', 
+                    help='Path to folder in witch the file are. Defaults to "."')
+parser.add_argument('-v', '--verbose', action='store_true', default=False,
+                    dest='verbose', help='Chitchat while working!')
+parser.add_argument('-t', '--test', action='store_true', 
+                    dest='test', default=False,
+                    help="Only print what would happen. Don't do any real work")
+parser.add_argument('-s', '--sensitive', action='store_true', 
+                    dest='sensitive', default=False, 
+                    help='Quit on any sign of truble.')
+
+options = parser.parse_args()
+
+# TODO: Zameniti ovo pravim logovanjem
+def log(msg):
+    if options.verbose:
+        print(msg)
+
+def get_files(pattern):
+    '''Returns list of files that mathches glob pattern provided.
     
-    Provided path can be relative or absolute. If nothing is provided, 
-    absolute path to current folder will be returned.
-    
-    If provided folder does not exist, ValueError will be rased.    
-    '''
-    if not os.path.isabs(folder):
-        folder = os.path.abspath(os.path.join(os.getcwd(), folder))
-    if not os.path.isdir(folder):
-        raise ValueError('Folder "%s" does not exist' % folder)
-    return folder
+    Pattern can be iterabole with multiple patterns.'''
+    if not hasattr(pattern, '__iter__'):
+        pattern = [pattern]
+    return list(flatten([glob.glob(x) for x in pattern]))
 
 def extract_data(names):
+    '''Returns dict with data about each episode.
+    
+    Key is tupple where first value is season number, and the second value is
+    episode number. Value is name of the file.
+    '''
     res = {}
     for name in names:
         for reg_exp in REG_EXPS:
             ep = reg_exp.match(name)
             if ep is not None:
                 ep = ep.groupdict()
-                res[(int(ep['season']), int(ep['episode']))] = name
-    return res
+                season = int(ep['season'])
+                episode = int(ep['episode'])
+                key = (season, episode)
+                if res.has_key(key) and options.sensitive:
+                    raise ValueError('''Looks like files %s and %s are the same 
+                    episode. Please leave only valid file or not use 
+                    --sensitive option (in that case one of the files will 
+                    remain untouched''' % (name, res[key]))
+                res[(season, episode)] = name
                 
+    return res
+
 def rename(from_, to):
-    from_name, from_ext = os.path.splitext(from_) #@UnusedVariable
-    to_name, to_ext = os.path.splitext(to) #@UnusedVariable
+    '''Renames `to` file based on `from_` name.
     
+    Creates new file name that contains everything before the final dot
+    (or whatever extension separator is) from `from_` and extension (and 
+    extension separator) from `to`.
+    
+    If file with that new name already exists raises ValueError.
+    '''
+    from_name = os.path.splitext(from_)[0] 
+    to_ext = os.path.splitext(to)[1] 
     new_name = from_name + to_ext
-    print 'Renameing %s to %s' % (to, new_name)
-    os.rename(to, new_name)
-
-
-if len(sys.argv) > 1:
-    folder = sys.argv[1]
-else:
-    folder = '.'
-try:
-    ROOT = get_abs_folder(folder)
-except ValueError, e:
-    print str(e)
-    sys.exit(1)
+    new_file_path = os.path.join(os.getcwd(), new_name)
+    if os.path.exists(new_file_path):
+        raise ValueError('Tried to rename {0} to {1}, but {1} already exists'.
+                                                        format(to, new_name) )
+    else:
+        log('Renameing %s to %s' % (to, new_name))
+        if not options.test:
+            os.rename(to, new_name)
+        
+def rename_all(from_, to):
+    '''Maps from and to files and calls `rename` for each of them.
+    '''
+    for key, val in from_.iteritems():
+        other_val = to[key]
+        rename(val, other_val)
     
-oldwd = os.getcwd()
-os.chdir(ROOT)
+def main():
+    oldwd = os.getcwd()
+    options = parser.parse_args()
+    try:
+        root = get_abs_folder(options.folder)
+    except ValueError, e:
+        print(e)
+        sys.exit(1)
+    os.chdir(root)
+    log('Temporarily changing working dir to %s' % root)
+    video_files = get_files(VIDEO_GLOB)
+    subtitle_files = get_files(SUBTITLE_GLOB)
+    try:
+        video_data = extract_data(video_files)
+        subtitle_data = extract_data(subtitle_files)
+        rename_all(video_data, subtitle_data)
+    except ValueError, e:
+        print(e)
+        sys.exit(2)
+    
+    log('Restoring working dir to %s' % oldwd)
+    os.chdir(oldwd)
 
-TITLE_FILES = glob.glob('*.srt')
-AVI_FILES = glob.glob('*.avi')
+if __name__ == '__main__':
+    main()
 
-print TITLE_FILES
-print AVI_FILES
-
-TITLE_DATA = extract_data(TITLE_FILES)
-AVI_DATA = extract_data(AVI_FILES)
-
-print TITLE_DATA
-print AVI_DATA
-
-for episode, avi_name in AVI_DATA.iteritems():
-    subtitle_name = TITLE_DATA[episode]
-    rename(avi_name, subtitle_name)
-
-os.chdir(oldwd)
 
