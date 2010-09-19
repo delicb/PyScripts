@@ -38,7 +38,7 @@ SUBTITLE_GLOB = ['*.srt', '*.sub']
 
 parser = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument('-f', '--folder', default='.', dest='folder', 
+parser.add_argument('folder', nargs='?', default='.', 
                     help='Path to folder in witch the file are. Defaults to "."')
 parser.add_argument('-v', '--verbose', action='store_true', default=False,
                     dest='verbose', help='Chitchat while working!')
@@ -84,6 +84,7 @@ def extract_data(names):
                     episode. Please leave only valid file or not use 
                     --sensitive option (in that case one of the files will 
                     remain untouched''' % (name, res[key]))
+                log('Found matching file %s' % name)
                 res[(season, episode)] = name
                 
     return res
@@ -113,8 +114,9 @@ def rename_all(from_, to):
     '''Maps from and to files and calls `rename` for each of them.
     '''
     for key, val in from_.iteritems():
-        other_val = to[key]
-        rename(val, other_val)
+        other_val = to.get(key, None)
+        if other_val is not None:
+            rename(val, other_val)
     
 def main():
     oldwd = os.getcwd()
