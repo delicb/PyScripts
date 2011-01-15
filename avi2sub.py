@@ -102,13 +102,14 @@ def rename(from_, to):
     to_ext = os.path.splitext(to)[1] 
     new_name = from_name + to_ext
     new_file_path = os.path.join(os.getcwd(), new_name)
-    if os.path.exists(new_file_path):
-        raise ValueError('Tried to rename {0} to {1}, but {1} already exists'.
-                                                        format(to, new_name) )
-    else:
-        log('Renameing %s to %s' % (to, new_name))
-        if not options.test:
-            os.rename(to, new_name)
+    if not to == new_name:
+        if os.path.exists(new_file_path):
+            raise ValueError('Tried to rename {0} to {1}, but {1} already exists'.
+                                                            format(to, new_name) )
+        else:
+            log('Renameing %s to %s' % (to, new_name))
+            if not options.test:
+                os.rename(to, new_name)
         
 def rename_all(from_, to):
     '''Maps from and to files and calls `rename` for each of them.
