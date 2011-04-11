@@ -79,7 +79,7 @@ def extract_data(names):
                 season = int(ep['season'])
                 episode = int(ep['episode'])
                 key = (season, episode)
-                if res.has_key(key) and options.sensitive:
+                if key in res and options.sensitive:
                     raise ValueError('''Looks like files %s and %s are the same 
                     episode. Please leave only valid file or not use 
                     --sensitive option (in that case one of the files will 
@@ -114,7 +114,8 @@ def rename(from_, to):
 def rename_all(from_, to):
     '''Maps from and to files and calls `rename` for each of them.
     '''
-    for key, val in from_.iteritems():
+    for key in from_:
+        val = from_[key]
         other_val = to.get(key, None)
         if other_val is not None:
             rename(val, other_val)
@@ -124,7 +125,7 @@ def main():
     options = parser.parse_args()
     try:
         root = get_abs_folder(options.folder)
-    except ValueError, e:
+    except ValueError as e:
         print(e)
         sys.exit(1)
     os.chdir(root)
@@ -135,7 +136,7 @@ def main():
         video_data = extract_data(video_files)
         subtitle_data = extract_data(subtitle_files)
         rename_all(video_data, subtitle_data)
-    except ValueError, e:
+    except ValueError as e:
         print(e)
         sys.exit(2)
     
