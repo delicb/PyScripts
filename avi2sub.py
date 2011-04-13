@@ -121,7 +121,7 @@ def rename_all(from_, to):
     
 def main():
     oldwd = os.getcwd()
-    options = parser.parse_args()
+    #options = parser.parse_args()
     try:
         root = get_abs_folder(options.folder)
     except ValueError, e:
