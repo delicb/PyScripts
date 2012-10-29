@@ -27,10 +27,10 @@ from utils import get_abs_folder, flatten
 # lakse za kasnija prosirenja, a bice ih, posto ne verujem da sam ovde
 # pokrio ni pola varijacija imena
 REG_EXPS = [
-    re.compile(r'.* ?S(?P<season>\d+)(x| )?EP?(?P<episode>\d+).*', re.I),
-    re.compile(r'.*\[?((?P<season>\d+)x(?P<episode>\d+))\]?.*', re.I),
-    re.compile(r'.*(?P<season>\d)(?P<episode>\d{2}).*', re.I),
-    re.compile(r'.*Series ?(?P<season>\d) ?Ep(?P<episode>\d+).*', re.I),
+    re.compile(r'.*? ?S(?P<season>\d+)(x| )?EP?(?P<episode>\d+).*', re.I),
+    re.compile(r'.*?\[?((?P<season>\d+)x(?P<episode>\d+))\]?.*', re.I),
+    re.compile(r'.*?(?P<season>\d+)(?P<episode>\d{2}).*', re.I),
+    re.compile(r'.*?Series ?(?P<season>\d+) ?Ep(?P<episode>\d+).*', re.I),
 ]
 
 VIDEO_GLOB = ['*.avi', '*.wmv']
