@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 '''
 Searches for video and subtitle files in provided folder and tries to find
 matches based on there names and renames subtitle files to match corespodenting
@@ -112,8 +112,7 @@ def rename(from_, to):
                 os.rename(to, new_name)
         
 def rename_all(from_, to):
-    '''Maps from and to files and calls `rename` for each of them.
-    '''
+    '''Maps from and to files and calls `rename` for each of them.'''
     for key, val in from_.iteritems():
         other_val = to.get(key, None)
         if other_val is not None:
@@ -121,7 +120,7 @@ def rename_all(from_, to):
     
 def main():
     oldwd = os.getcwd()
-    #options = parser.parse_args()
+    options = parser.parse_args()
     try:
         root = get_abs_folder(options.folder)
     except ValueError, e:
