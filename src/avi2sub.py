@@ -33,7 +33,7 @@ REG_EXPS = [
     re.compile(r'.*?Series ?(?P<season>\d+) ?Ep(?P<episode>\d+).*', re.I),
 ]
 
-VIDEO_GLOB = ['*.avi', '*.wmv']
+VIDEO_GLOB = ['*.avi', '*.wmv', '*.mkv']
 SUBTITLE_GLOB = ['*.srt', '*.sub']
 
 parser = argparse.ArgumentParser(description=__doc__,
