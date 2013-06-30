@@ -8,7 +8,6 @@ __date__ = "Sep 13, 2010"
 In fact, this script just creates few folder, another few folder 
 inside of them and couple of empty files inside of each folder.
 '''
-
 import os
 import sys
 import random
