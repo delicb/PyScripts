@@ -14,14 +14,15 @@ __all__ = ['get_path_to_executable']
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('cmd', help='Executable to find in path')
-parser.add_argument('-e', '--extensions', nargs='*', dest='extensions', 
-                    help='Extensions to consider as executables. ' + 
+parser.add_argument('-e', '--extensions', nargs='*', dest='extensions',
+                    help='Extensions to consider as executables. ' +
                     'Defaults to extensions defined in environment variable PATHEXT.')
 
+
 def get_path_to_executable(name, extensions=None):
-    ''' Finds path to executable in path.  
-    
-    Simulates which command from UnixTools for windows, but does not requrie
+    ''' Finds path to executable in path.
+
+    Simulates which command from UnixTools for windows, but does not require
     extension to be supplied.
     '''
     name, ext = os.path.splitext(name)
@@ -34,7 +35,8 @@ def get_path_to_executable(name, extensions=None):
             executable = os.path.join(path, '{0}{1}'.format(name, ext))
             if os.path.isfile(executable):
                 yield executable
-            
+
+
 def main():
     options = parser.parse_args()
     ext = options.extensions if options.extensions is not None else None
