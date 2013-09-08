@@ -21,9 +21,9 @@ FILE_LIST = []
 def get_opt_parser():
     parser = OptionParser(usage=USAGE, version="%prog 0.1")
     parser.add_option("-d", "--delete", dest="delete", action="store_true",
-                        default=False, help="Delete folders after flatting")
+                      default=False, help="Delete folders after flatting")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
-                        default=False, help="Don't print status messages to stdout")
+                      default=False, help="Don't print status messages to stdout")
     return parser
 
 
@@ -57,9 +57,9 @@ def generate_unique_file_name(file):
     '''Generates unique file name based on given file name.
 
     If given file name is not in FILE_LIST (global variable) returns the same
-    name. 
+    name.
     If it is in the FILE_LIST it appendes nubmer at the end of the file name,
-    but before extension. 
+    but before extension.
     If there are more then 2 files with the same name number at the end of the
     name will be incremented.
 
@@ -86,7 +86,7 @@ def delete_folders(folders):
     witch folders should be deleted.'''
     for folder in folders:
         log("Deleting folder %s" % folder)
-        # NOTE: Ovde namerno korisnim os.rmdir umesto shutil.rmtree, jer 
+        # NOTE: Ovde namerno korisnim os.rmdir umesto shutil.rmtree, jer
         # bi folderi trebalo da su prazni. Kad kasnije implementiram
         # exclude mehanizam ovo bi trebalo promeniti u shutil.rmtree
         os.rmdir(folder)
